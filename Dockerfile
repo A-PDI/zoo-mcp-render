@@ -1,18 +1,16 @@
 ﻿FROM python:3.11-slim
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
-    && pip install --no-cache-dir uv \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
 ENV PORT=10000
 ENV PYTHONUNBUFFERED=1
 
+# Install Zoo during the image build, avoiding uvx downloads during
+# ChatGPT's connection attempt.
+RUN pip install --no-cache-dir "zoo-mcp==0.18.1"
+
+COPY server_http.py /app/server_http.py
+
 EXPOSE 10000
 
-CMD ["sh", "-c", "exec npx -y supergateway@3.4.3 --port \"$PORT\" --stdio \"uvx zoo-mcp\" --outputTransport streamableHttp --streamableHttpPath /mcp"]
+CMD ["python", "/app/server_http.py"]
